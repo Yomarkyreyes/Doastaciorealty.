@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ventas — Do Astacio Realty</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+<!-- ── NAVEGACIÓN ── -->
+<nav>
+  <a href="index.html">Do Astacio Realty</a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="ventas.html" class="active">Ventas</a>
+    <a href="alquiler.html">Alquiler</a>
+    <a href="contacto.html">Contacto</a>
+    <a href="ayuda.html">Ayuda</a>
+  </div>
+</nav>
+
+<!-- ── HEADER ── -->
+<header>
+  <span class="label">Catálogo</span>
+  <h1>Propiedades en Venta</h1>
+  <p>Casas, apartamentos y locales disponibles en toda RD</p>
+</header>
+
+<!-- ── CONTENIDO ── -->
+<div class="container">
+
+  <!-- Barra de búsqueda -->
+  <div class="search-bar">
+    <span style="font-size:1.1rem">🔍</span>
+    <input type="text" id="buscar" placeholder="Buscar por ciudad, zona o tipo...">
+    <button onclick="filtrar()">Buscar</button>
+    <button class="btn-ghost" onclick="limpiar()">Limpiar</button>
+  </div>
+
+  <!-- Mapa -->
+  <div id="map"></div>
+
+  <!-- Resultados -->
+  <div class="section-header">
+    <h2>Propiedades disponibles</h2>
+    <p id="contador" style="color:var(--text-muted);font-size:.85rem;margin-top:.25rem"></p>
+  </div>
+
+  <div class="grid" id="lista"></div>
+
+</div>
+
+<!-- ── MODAL DETALLES ── -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close" onclick="cerrar()" title="Cerrar">&times;</button>
+    <span class="label">Detalles de propiedad</span>
+    <h3 id="mTitulo"></h3>
+
+    <div class="modal-row">
+      <span class="modal-icon">💰</span>
+      <span id="mPrecio"></span>
+    </div>
+    <div class="modal-row">
+      <span class="modal-icon">📍</span>
+      <span id="mUbicacion"></span>
+    </div>
+    <div class="modal-row">
+      <span class="modal-icon">📞</span>
+      <span id="mContacto"></span>
+    </div>
+
+    <div class="modal-actions">
+      <a id="mWhatsapp" target="_blank">
+        <button style="width:100%;background:#25D366;color:#fff">💬 WhatsApp</button>
+      </a>
+      <a id="mMapa" target="_blank">
+        <button style="width:100%" class="btn-outline">🗺️ Ver mapa</button>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <span class="footer-brand">Do Astacio Realty</span>
+  <p>© 2026 Do Astacio Realty · República Dominicana</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+// ── DATOS ──
+const propiedades = [
+  {
+    titulo: "Casa Moderna en Santo Domingo",
+    precio: "US$120,000",
+    ubicacion: "santo domingo",
+    tipo: "Casa",
+    lat: 18.48, lng: -69.93,
+    contacto: "8090000000",
+    imagenes: [
+      "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80"
+    ]
+  },
+  {
+    titulo: "Villa en Santiago",
+    precio: "US$200,000",
+    ubicacion: "santiago",
+    tipo: "Villa",
+    lat: 19.45, lng: -70.69,
+    contacto: "8091111111",
+    imagenes: [
+      "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&q=80",
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80"
+    ]
+  },
+  {
+    titulo: "Apartamento en Punta Cana",
+    precio: "US$95,000",
+    ubicacion: "punta cana",
+    tipo: "Apartamento",
+    lat: 18.58, lng: -68.40,
+    contacto: "8092222222",
+    imagenes: [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80"
+    ]
+  }
+];
+
+// ── MAPA ──
+const map = L.map('map').setView([18.7, -70.1], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+let markers = [];
+
+// ── MOSTRAR ──
+function mostrar(lista) {
+  const contenedor = document.getElementById("lista");
+  const contador = document.getElementById("contador");
+  contenedor.innerHTML = "";
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  contador.textContent = `${lista.length} propiedad${lista.length !== 1 ? 'es' : ''} encontrada${lista.length !== 1 ? 's' : ''}`;
+
+  if (lista.length === 0) {
+    contenedor.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h3>Sin resultados</h3>
+        <p>No encontramos propiedades con ese criterio. Intenta con otra búsqueda.</p>
+      </div>`;
+    return;
+  }
+
+  lista.forEach((p, i) => {
+    // Imágenes
+    const imgs = p.imagenes.map(src =>
+      `<img src="${src}" alt="${p.titulo}" loading="lazy">`
+    ).join("");
+
+    // Card
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.innerHTML = `
+      <div class="slider" id="slider-v-${i}">
+        ${imgs}
+        ${p.imagenes.length > 1 ? `
+          <button onclick="prevImg(event,'slider-v-${i}')" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="nextImg(event,'slider-v-${i}')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">›</button>
+        ` : ''}
+        <span class="card-badge">${p.tipo}</span>
+      </div>
+      <div class="card-content">
+        <h3>${p.titulo}</h3>
+        <p class="price">${p.precio}</p>
+        <p class="card-meta">📍 ${p.ubicacion.charAt(0).toUpperCase() + p.ubicacion.slice(1)}</p>
+        <button onclick="abrirModal('${p.titulo}')">Ver detalles</button>
+      </div>`;
+    contenedor.appendChild(card);
+
+    // Marcador mapa
+    const marker = L.marker([p.lat, p.lng]).addTo(map)
+      .bindPopup(`<strong>${p.titulo}</strong><br>${p.precio}`);
+    markers.push(marker);
+  });
+}
+
+// ── SLIDER ──
+function nextImg(e, id) {
+  e.stopPropagation();
+  const s = document.getElementById(id);
+  const imgs = s.querySelectorAll('img');
+  let cur = s.dataset.cur ? parseInt(s.dataset.cur) : 0;
+  cur = (cur + 1) % imgs.length;
+  s.dataset.cur = cur;
+  imgs.forEach((img, i) => img.style.display = i === cur ? 'block' : 'none');
+}
+function prevImg(e, id) {
+  e.stopPropagation();
+  const s = document.getElementById(id);
+  const imgs = s.querySelectorAll('img');
+  let cur = s.dataset.cur ? parseInt(s.dataset.cur) : 0;
+  cur = (cur - 1 + imgs.length) % imgs.length;
+  s.dataset.cur = cur;
+  imgs.forEach((img, i) => img.style.display = i === cur ? 'block' : 'none');
+}
+
+// ── FILTRO ──
+function filtrar() {
+  const txt = document.getElementById("buscar").value.toLowerCase().trim();
+  mostrar(propiedades.filter(p =>
+    p.ubicacion.includes(txt) || p.titulo.toLowerCase().includes(txt) || p.tipo.toLowerCase().includes(txt)
+  ));
+}
+function limpiar() {
+  document.getElementById("buscar").value = "";
+  mostrar(propiedades);
+}
+document.getElementById("buscar").addEventListener("keydown", e => {
+  if (e.key === "Enter") filtrar();
+});
+
+// ── MODAL ──
+function abrirModal(nombre) {
+  const p = propiedades.find(x => x.titulo === nombre);
+  document.getElementById("mTitulo").textContent = p.titulo;
+  document.getElementById("mPrecio").textContent = p.precio;
+  document.getElementById("mUbicacion").textContent = p.ubicacion.charAt(0).toUpperCase() + p.ubicacion.slice(1);
+  document.getElementById("mContacto").textContent = p.contacto;
+  document.getElementById("mWhatsapp").href = `https://wa.me/${p.contacto}?text=Hola, estoy interesado en ${p.titulo}`;
+  document.getElementById("mMapa").href = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
+  document.getElementById("modal").style.display = "flex";
+}
+function cerrar() {
+  document.getElementById("modal").style.display = "none";
+}
+document.getElementById("modal").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal")) cerrar();
+});
+
+// ── INICIO ──
+mostrar(propiedades);
+
+</script>
+</body>
+</html>

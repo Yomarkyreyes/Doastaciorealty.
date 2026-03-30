@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacto — Do Astacio Realty</title>
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<!-- ── NAVEGACIÓN ── -->
+<nav>
+  <a href="index.html">Do Astacio Realty</a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="ventas.html">Ventas</a>
+    <a href="alquiler.html">Alquiler</a>
+    <a href="contacto.html" class="active">Contacto</a>
+    <a href="ayuda.html">Ayuda</a>
+  </div>
+</nav>
+
+<!-- ── HEADER ── -->
+<header>
+  <span class="label">Estamos aquí para ti</span>
+  <h1>Contáctanos</h1>
+  <p>Escríbenos y un agente te responderá a la brevedad</p>
+</header>
+
+<!-- ── CONTENIDO ── -->
+<div class="container">
+
+  <div class="grid" style="grid-template-columns: 1fr 1.6fr; align-items: start; gap: 2.5rem;">
+
+    <!-- Info de contacto -->
+    <div>
+      <span class="label">Información</span>
+      <h2 style="margin-bottom:1.25rem">Hablemos</h2>
+
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-info">
+          <div style="font-size:1.4rem">📞</div>
+          <h4>Teléfono</h4>
+          <p>809-000-0000</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-info">
+          <div style="font-size:1.4rem">💬</div>
+          <h4>WhatsApp</h4>
+          <p>+1 809-000-0000</p>
+          <a href="https://wa.me/18090000000?text=Hola, me interesa una propiedad" target="_blank">
+            <button style="margin-top:.75rem;background:#25D366;color:#fff;width:100%">Abrir WhatsApp</button>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-info">
+          <div style="font-size:1.4rem">📧</div>
+          <h4>Correo</h4>
+          <p>info@doastaciorealty.com</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="form-card">
+      <span class="label">Formulario</span>
+      <h2>Envíanos un mensaje</h2>
+      <p style="margin-bottom:1.75rem">Completa el formulario y te contactamos en menos de 24 horas.</p>
+
+      <div class="form-group">
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" placeholder="Ej: Juan Pérez">
+      </div>
+
+      <div class="form-group">
+        <label for="correo">Correo electrónico</label>
+        <input type="email" id="correo" placeholder="correo@ejemplo.com">
+      </div>
+
+      <div class="form-group">
+        <label for="telefono">Teléfono (opcional)</label>
+        <input type="tel" id="telefono" placeholder="809-000-0000">
+      </div>
+
+      <div class="form-group">
+        <label for="interes">¿Qué te interesa?</label>
+        <select id="interes">
+          <option value="">Seleccionar...</option>
+          <option>Comprar una propiedad</option>
+          <option>Alquilar una propiedad</option>
+          <option>Publicar una propiedad</option>
+          <option>Asesoría general</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="mensaje">Mensaje</label>
+        <textarea id="mensaje" placeholder="Cuéntanos en qué podemos ayudarte..."></textarea>
+      </div>
+
+      <button class="btn-lg w-full" onclick="enviar()">Enviar mensaje</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <span class="footer-brand">Do Astacio Realty</span>
+  <p>© 2026 Do Astacio Realty · República Dominicana</p>
+</footer>
+
+<script>
+function enviar() {
+  const nombre  = document.getElementById("nombre").value.trim();
+  const correo  = document.getElementById("correo").value.trim();
+  const mensaje = document.getElementById("mensaje").value.trim();
+
+  if (!nombre || !correo || !mensaje) {
+    mostrarToast("⚠️ Por favor completa los campos requeridos.", "warn");
+    return;
+  }
+  if (!correo.includes("@")) {
+    mostrarToast("⚠️ Ingresa un correo válido.", "warn");
+    return;
+  }
+
+  mostrarToast("✅ Mensaje enviado. ¡Te contactaremos pronto!");
+
+  document.getElementById("nombre").value   = "";
+  document.getElementById("correo").value   = "";
+  document.getElementById("telefono").value = "";
+  document.getElementById("interes").value  = "";
+  document.getElementById("mensaje").value  = "";
+}
+
+function mostrarToast(msg, tipo) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.classList.add("hide"); setTimeout(() => t.remove(), 350); }, 3000);
+}
+</script>
+
+</body>
+</html>
